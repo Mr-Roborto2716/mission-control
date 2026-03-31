@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🤖 Mission Control — Roborto</title>
+  <style>
+    /* ===== CSS RESET & ROOT ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #08090e;
+      --surface: #0f1117;
+      --card:    #13151f;
+      --border:  #1e2130;
+      --text:    #e2e8f0;
+      --muted:   #64748b;
+      --accent:  #6366f1;
+      --accent2: #818cf8;
+      --green:   #22c55e;
+      --red:     #ef4444;
+      --yellow:  #eab308;
+      --radius:  12px;
+      --gap:     16px;
+      --font:    'Inter', system-ui, -apple-system, sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { color: var(--accent); text-decoration: underline; }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(8, 9, 14, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .header-brand {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .header-brand span { color: var(--accent2); }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .header-updated {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 100px;
+      border: 1px solid;
+      white-space: nowrap;
+      transition: all 0.3s;
+    }
+    .status-pill.online  { color: var(--green); border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.08); }
+    .status-pill.offline { color: var(--red);   border-color: rgba(239,68,68,0.3);  background: rgba(239,68,68,0.08);  }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .status-pill.online .status-dot { animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ===== LAYOUT ===== */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px 24px 48px;
+    }
+    .grid {
+      display: grid;
+      gap: var(--gap);
+    }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .col-span-2 { grid-column: span 2; }
+    .col-span-3 { grid-column: span 3; }
+
+    @media (max-width: 1024px) {
+      .grid-3 { grid-template-columns: repeat(2, 1fr); }
+      .col-span-3 { grid-column: span 2; }
+    }
+    @media (max-width: 640px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .col-span-2, .col-span-3 { grid-column: span 1; }
+      .container { padding: 16px 16px 40px; }
+      .header { padding: 0 16px; }
+      .header-brand { font-size: 15px; }
+    }
+
+    /* ===== CARD ===== */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(99,102,241,0.4), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .card:hover { border-color: rgba(99,102,241,0.3); }
+    .card:hover::before { opacity: 1; }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 8px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .card-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 100px;
+      background: rgba(99,102,241,0.15);
+      color: var(--accent2);
+      border: 1px solid rgba(99,102,241,0.2);
+    }
+
+    /* ===== STAT ROW ===== */
+    .stat-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .stat-unit {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    /* ===== KV ROWS ===== */
+    .kv-list { display: flex; flex-direction: column; gap: 10px; }
+    .kv-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .kv-label {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .kv-value {
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+      text-align: right;
+      word-break: break-all;
+    }
+    .kv-separator {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+      margin: 0 8px;
+      min-width: 12px;
+    }
+
+    /* ===== PROGRESS BAR ===== */
+    .progress-wrap { margin-bottom: 14px; }
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .progress-name { font-size: 12px; color: var(--muted); }
+    .progress-pct  { font-size: 12px; color: var(--text); font-weight: 600; }
+    .progress-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 100px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width 1s ease;
+    }
+    .progress-fill.warn { background: linear-gradient(90deg, var(--yellow), #f59e0b); }
+    .progress-fill.danger { background: linear-gradient(90deg, var(--red), #f87171); }
+
+    /* ===== SPARKLINE ===== */
+    .sparkline-wrap {
+      margin-bottom: 14px;
+    }
+    .sparkline-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .sparkline-name { font-size: 12px; color: var(--muted); }
+    .sparkline-val  { font-size: 12px; color: var(--text); font-weight: 600; }
+    canvas.sparkline {
+      width: 100%;
+      height: 48px;
+      border-radius: 6px;
+      display: block;
+    }
+
+    /* ===== ROBORTO STATUS ===== */
+    .roborto-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      background: rgba(99,102,241,0.06);
+      border: 1px solid rgba(99,102,241,0.15);
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+    .roborto-avatar {
+      font-size: 36px;
+      line-height: 1;
+    }
+    .roborto-info { flex: 1; min-width: 0; }
+    .roborto-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+    .roborto-model {
+      font-size: 12px;
+      color: var(--accent2);
+      font-family: monospace;
+    }
+    .roborto-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 100px;
+    }
+    .roborto-pill.online  { color: var(--green); background: rgba(34,197,94,0.1);  border: 1px solid rgba(34,197,94,0.25); }
+    .roborto-pill.offline { color: var(--yellow); background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.25); }
+
+    /* ===== ARTICLES LIST ===== */
+    .article-list { display: flex; flex-direction: column; gap: 10px; }
+    .article-item {
+      padding: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .article-item:hover {
+      border-color: rgba(99,102,241,0.3);
+      background: rgba(99,102,241,0.04);
+    }
+    .article-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+    .article-title a { color: var(--text); }
+    .article-title a:hover { color: var(--accent2); text-decoration: none; }
+    .article-meta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ===== SECTION COUNTS ===== */
+    .section-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 8px;
+    }
+    .section-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .section-chip-name {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.3;
+    }
+    .section-chip-count {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent2);
+      flex-shrink: 0;
+    }
+
+    /* ===== CRON TABLE ===== */
+    .cron-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .cron-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0 12px 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .cron-table td {
+      padding: 10px 12px 10px 0;
+      font-size: 12px;
+      border-bottom: 1px solid rgba(30,33,48,0.5);
+      vertical-align: middle;
+    }
+    .cron-table tr:last-child td { border-bottom: none; }
+    .cron-name { font-weight: 500; color: var(--text); }
+    .cron-schedule {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--accent2);
+      background: rgba(99,102,241,0.08);
+      padding: 2px 7px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .cron-time {
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .cron-enabled {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+    }
+    .cron-enabled.yes { background: var(--green); }
+    .cron-enabled.no  { background: var(--muted); }
+
+    /* ===== QUICK LINKS ===== */
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+    }
+    .link-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .link-card:hover {
+      border-color: rgba(99,102,241,0.4);
+      background: rgba(99,102,241,0.06);
+      transform: translateY(-1px);
+      text-decoration: none;
+      color: var(--text);
+    }
+    .link-icon {
+      font-size: 22px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .link-info { min-width: 0; }
+    .link-name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .link-url {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ===== BRIEF CARD ===== */
+    .brief-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, var(--accent), #4f46e5);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      text-decoration: none;
+    }
+    .brief-cta:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      color: white;
+      text-decoration: none;
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty {
+      color: var(--muted);
+      font-size: 12px;
+      font-style: italic;
+      padding: 12px 0;
+    }
+
+    /* ===== SECTION LABEL ===== */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin: 24px 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ===== LOADING OVERLAY ===== */
+    .loading-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent));
+      background-size: 200% 100%;
+      animation: shimmer 1.5s linear infinite;
+      transition: width 0.3s, opacity 0.5s;
+      z-index: 9999;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ===== UPTIME FORMAT ===== */
+    .uptime-display {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading bar -->
+<div class="loading-bar" id="loadingBar" style="width:0%;opacity:0;"></div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-brand">🤖 <span>Mission</span> Control</div>
+  <div class="header-right">
+    <span class="header-updated" id="lastUpdated">Loading…</span>
+    <span class="status-pill offline" id="statusPill">
+      <span class="status-dot"></span>
+      <span id="statusText">Offline</span>
+    </span>
+  </div>
+</header>
+
+<!-- Main content -->
+<main class="container">
+
+  <!-- Row 1: Roborto + Machine overview -->
+  <div class="section-label">System</div>
+  <div class="grid grid-3">
+
+    <!-- Roborto Status -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🤖 Roborto</div>
+      </div>
+      <div class="roborto-status">
+        <div class="roborto-avatar">🤖</div>
+        <div class="roborto-info">
+          <div class="roborto-name">Roborto</div>
+          <div class="roborto-model" id="robortoModel">–</div>
+        </div>
+        <div class="roborto-pill offline" id="robertoPill">
+          <span>●</span> <span id="robertoStatus">–</span>
+        </div>
+      </div>
+      <div class="kv-list">
+        <div class="kv-row">
+          <span class="kv-label">Last seen</span>
+          <span class="kv-separator"></span>
+          <span class="kv-value" id="robortoLastSeen">–</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Machine Monitor -->
+    <div class="card col-span-2">
+      <div class="card-header">
+        <div class="card-title">💻 Machine Monitor</div>
+        <div class="kv-value" style="font-size:12px;color:var(--muted);" id="machineHostname">–</div>
+      </div>
+
+      <!-- CPU Sparkline -->
+      <div class="sparkline-wrap">
+        <div class="sparkline-header">
+          <span class="sparkline-name">CPU Load (1m avg)</span>
+          <span class="sparkline-val" id="cpuLoad">–</span>
+        </div>
+        <canvas class="sparkline" id="cpuSparkline" width="600" height="96"></canvas>
+      </div>
+
+      <div class="grid grid-2" style="gap:12px;">
+        <!-- RAM -->
+        <div>
+          <div class="progress-wrap">
+            <div class="progress-header">
+              <span class="progress-name">RAM Usage</span>
+              <span class="progress-pct" id="ramPct">–</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="ramFill" style="width:0%"></div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="ramDetail">–</div>
+          </div>
+        </div>
+        <!-- Disk -->
+        <div>
+          <div class="progress-wrap">
+            <div class="progress-header">
+              <span class="progress-name">Disk Usage</span>
+              <span class="progress-pct" id="diskPct">–</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="diskFill" style="width:0%"></div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="diskDetail">–</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kv-list" style="margin-top:4px;">
+        <div class="kv-row">
+          <span class="kv-label">Uptime</span>
+          <span class="kv-separator"></span>
+          <span class="kv-value" id="machineUptime">–</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-label">Load avg (5m / 15m)</span>
+          <span class="kv-separator"></span>
+          <span class="kv-value" id="loadAvg">–</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-label">Tailscale IP</span>
+          <span class="kv-separator"></span>
+          <span class="kv-value" id="tailscaleIp">–</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Row 2: Daily Brief + Tryadd Watch -->
+  <div class="section-label" style="margin-top:8px;">Intel</div>
+  <div class="grid grid-3">
+
+    <!-- Daily Brief -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🗞️ Daily Brief</div>
+        <span class="card-badge" id="briefTotal">– articles</span>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <div class="kv-list">
+          <div class="kv-row">
+            <span class="kv-label">Last updated</span>
+            <span class="kv-separator"></span>
+            <span class="kv-value" id="briefUpdated">–</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-grid" id="briefSections">
+        <!-- populated by JS -->
+      </div>
+
+      <div style="margin-top:16px;">
+        <a class="brief-cta" href="http://100.108.159.44:8765" target="_blank" rel="noopener">
+          Open Brief →
+        </a>
+      </div>
+    </div>
+
+    <!-- Tryadd Watch -->
+    <div class="card col-span-2">
+      <div class="card-header">
+        <div class="card-title">📊 Tryadd Watch</div>
+        <span class="card-badge">Latest</span>
+      </div>
+      <div class="article-list" id="tryaddArticles">
+        <div class="empty">No articles yet</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Row 3: Cron Jobs -->
+  <div class="section-label" style="margin-top:8px;">Automation</div>
+  <div class="grid">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">⏱️ Cron Jobs</div>
+        <span class="card-badge" id="cronCount">0 jobs</span>
+      </div>
+      <div id="cronTableWrap">
+        <div class="empty">No cron jobs found</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 4: Quick Links -->
+  <div class="section-label" style="margin-top:8px;">Quick Links</div>
+  <div class="grid">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🔗 Quick Links</div>
+      </div>
+      <div class="links-grid">
+        <a class="link-card" href="https://tryadd.mx" target="_blank" rel="noopener">
+          <div class="link-icon">🐄</div>
+          <div class="link-info">
+            <div class="link-name">Tryadd</div>
+            <div class="link-url">tryadd.mx</div>
+          </div>
+        </a>
+        <a class="link-card" href="https://github.com/Mr-Roborto2716" target="_blank" rel="noopener">
+          <div class="link-icon">🐙</div>
+          <div class="link-info">
+            <div class="link-name">GitHub</div>
+            <div class="link-url">Mr-Roborto2716</div>
+          </div>
+        </a>
+        <a class="link-card" href="http://100.108.159.44:8765" target="_blank" rel="noopener">
+          <div class="link-icon">🗞️</div>
+          <div class="link-info">
+            <div class="link-name">Daily Brief</div>
+            <div class="link-url">100.108.159.44:8765</div>
+          </div>
+        </a>
+        <a class="link-card" href="https://atomicmail.io" target="_blank" rel="noopener">
+          <div class="link-icon">⚛️</div>
+          <div class="link-info">
+            <div class="link-name">AtomicMail</div>
+            <div class="link-url">atomicmail.io</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ===== CONFIG =====
+const METRICS_URL = window.METRICS_URL || '/metrics.json';
+const REFRESH_INTERVAL = 60 * 1000; // 60 seconds
+const OFFLINE_THRESHOLD = 5 * 60 * 1000; // 5 minutes
+
+// ===== UTILITIES =====
+function el(id) { return document.getElementById(id); }
+
+function fmt(v, fallback = '–') {
+  return (v !== null && v !== undefined && v !== '') ? v : fallback;
+}
+
+function fmtNum(n, digits = 1) {
+  if (n === null || n === undefined || isNaN(n)) return '–';
+  return Number(n).toFixed(digits);
+}
+
+function fmtBytes(mb) {
+  if (!mb && mb !== 0) return '–';
+  if (mb >= 1024) return (mb / 1024).toFixed(1) + ' GB';
+  return Math.round(mb) + ' MB';
+}
+
+function fmtUptime(seconds) {
+  if (!seconds && seconds !== 0) return '–';
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const parts = [];
+  if (d > 0) parts.push(d + 'd');
+  if (h > 0) parts.push(h + 'h');
+  parts.push(m + 'm');
+  return parts.join(' ');
+}
+
+function fmtTime(iso) {
+  if (!iso) return '–';
+  try {
+    const d = new Date(iso);
+    const now = new Date();
+    const diff = now - d;
+
+    if (diff < 60000) return 'just now';
+    if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+    if (diff < 86400000) {
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      return h + 'h ' + m + 'm ago';
+    }
+    const days = Math.floor(diff / 86400000);
+    return days + 'd ago';
+  } catch { return '–'; }
+}
+
+function fmtDateTime(iso) {
+  if (!iso) return '–';
+  try {
+    return new Date(iso).toLocaleString(undefined, {
+      month: 'short', day: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  } catch { return '–'; }
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ===== SPARKLINE =====
+function drawSparkline(canvasId, data, color = '#6366f1', fillColor = 'rgba(99,102,241,0.12)') {
+  const canvas = el(canvasId);
+  if (!canvas || !data || data.length < 2) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth || canvas.clientWidth || 600;
+  const H = canvas.offsetHeight || canvas.clientHeight || 48;
+
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const min = Math.min(...data) * 0.9;
+  const max = Math.max(...data) * 1.1 || 1;
+  const range = max - min || 1;
+
+  const pad = { top: 4, bottom: 4, left: 2, right: 2 };
+  const w = W - pad.left - pad.right;
+  const h = H - pad.top - pad.bottom;
+
+  const points = data.map((v, i) => ({
+    x: pad.left + (i / (data.length - 1)) * w,
+    y: pad.top + (1 - (v - min) / range) * h
+  }));
+
+  // Fill
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    const cp = { x: (points[i-1].x + points[i].x) / 2, y: (points[i-1].y + points[i].y) / 2 };
+    ctx.quadraticCurveTo(points[i-1].x, points[i-1].y, cp.x, cp.y);
+  }
+  ctx.lineTo(points[points.length-1].x, points[points.length-1].y);
+  ctx.lineTo(points[points.length-1].x, pad.top + h);
+  ctx.lineTo(points[0].x, pad.top + h);
+  ctx.closePath();
+  ctx.fillStyle = fillColor;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    const cp = { x: (points[i-1].x + points[i].x) / 2, y: (points[i-1].y + points[i].y) / 2 };
+    ctx.quadraticCurveTo(points[i-1].x, points[i-1].y, cp.x, cp.y);
+  }
+  ctx.lineTo(points[points.length-1].x, points[points.length-1].y);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Last point dot
+  const last = points[points.length - 1];
+  ctx.beginPath();
+  ctx.arc(last.x, last.y, 3, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+// ===== RENDER FUNCTIONS =====
+
+function renderMachine(m, history) {
+  if (!m) return;
+
+  el('machineHostname').textContent = fmt(m.hostname);
+  el('machineUptime').textContent = fmtUptime(m.uptime_seconds);
+  el('tailscaleIp').textContent = fmt(m.tailscale_ip);
+  el('cpuLoad').textContent = fmtNum(m.load_1, 2);
+  el('loadAvg').textContent = fmtNum(m.load_5, 2) + ' / ' + fmtNum(m.load_15, 2);
+
+  // RAM
+  const ramPct = m.ram_total_mb > 0 ? Math.round((m.ram_used_mb / m.ram_total_mb) * 100) : 0;
+  el('ramPct').textContent = ramPct + '%';
+  el('ramDetail').textContent = fmtBytes(m.ram_used_mb) + ' used / ' + fmtBytes(m.ram_total_mb) + ' total';
+  const ramFill = el('ramFill');
+  ramFill.style.width = ramPct + '%';
+  ramFill.className = 'progress-fill' + (ramPct > 90 ? ' danger' : ramPct > 70 ? ' warn' : '');
+
+  // Disk
+  el('diskPct').textContent = m.disk_pct + '%';
+  el('diskDetail').textContent = fmtNum(m.disk_used_gb, 1) + ' GB used / ' + fmtNum(m.disk_total_gb, 1) + ' GB total';
+  const diskFill = el('diskFill');
+  diskFill.style.width = m.disk_pct + '%';
+  diskFill.className = 'progress-fill' + (m.disk_pct > 90 ? ' danger' : m.disk_pct > 75 ? ' warn' : '');
+
+  // Sparkline
+  if (history && history.load_1 && history.load_1.length > 1) {
+    setTimeout(() => drawSparkline('cpuSparkline', history.load_1), 50);
+  }
+}
+
+function renderRoborto(r) {
+  if (!r) return;
+
+  el('robortoModel').textContent = fmt(r.model);
+  el('robortoLastSeen').textContent = fmtTime(r.last_seen);
+
+  const pill = el('robertoPill');
+  const statusEl = el('robertoStatus');
+  const isOnline = r.status === 'online';
+  pill.className = 'roborto-pill ' + (isOnline ? 'online' : 'offline');
+  statusEl.textContent = isOnline ? 'Online' : 'Away';
+}
+
+function renderBrief(b) {
+  if (!b) return;
+
+  const total = b.total_articles || 0;
+  el('briefTotal').textContent = total + ' articles';
+  el('briefUpdated').textContent = fmtTime(b.last_updated);
+
+  const sectionsEl = el('briefSections');
+  const counts = b.article_counts || {};
+  const keys = Object.keys(counts);
+
+  if (keys.length === 0) {
+    sectionsEl.innerHTML = '<div class="empty">No data yet</div>';
+  } else {
+    sectionsEl.innerHTML = keys.map(k =>
+      `<div class="section-chip">
+        <span class="section-chip-name">${escHtml(k)}</span>
+        <span class="section-chip-count">${counts[k]}</span>
+      </div>`
+    ).join('');
+  }
+}
+
+function renderTryadd(b) {
+  const el_ = el('tryaddArticles');
+  if (!b || !b.tryadd_latest || b.tryadd_latest.length === 0) {
+    el_.innerHTML = '<div class="empty">No Tryadd articles yet</div>';
+    return;
+  }
+
+  el_.innerHTML = b.tryadd_latest.map(a =>
+    `<div class="article-item">
+      <div class="article-title">
+        ${a.link
+          ? `<a href="${escHtml(a.link)}" target="_blank" rel="noopener">${escHtml(a.title || 'Untitled')}</a>`
+          : escHtml(a.title || 'Untitled')}
+      </div>
+      ${a._source ? `<div class="article-meta">📰 ${escHtml(a._source)}</div>` : ''}
+    </div>`
+  ).join('');
+}
+
+function renderCron(jobs) {
+  const countEl = el('cronCount');
+  const wrapEl = el('cronTableWrap');
+
+  if (!jobs || jobs.length === 0) {
+    countEl.textContent = '0 jobs';
+    wrapEl.innerHTML = '<div class="empty">No cron jobs configured</div>';
+    return;
+  }
+
+  countEl.textContent = jobs.length + ' job' + (jobs.length !== 1 ? 's' : '');
+
+  const rows = jobs.map(j => {
+    const enabledClass = j.enabled ? 'yes' : 'no';
+    return `<tr>
+      <td>
+        <span class="cron-enabled ${enabledClass}" title="${j.enabled ? 'Enabled' : 'Disabled'}"></span>
+        &nbsp;<span class="cron-name">${escHtml(j.name)}</span>
+      </td>
+      <td><span class="cron-schedule">${escHtml(j.schedule)}</span></td>
+      <td class="cron-time">${fmtTime(j.last_run)}</td>
+      <td class="cron-time">${fmtDateTime(j.next_run)}</td>
+    </tr>`;
+  }).join('');
+
+  wrapEl.innerHTML = `<table class="cron-table">
+    <thead>
+      <tr>
+        <th>Job</th>
+        <th>Schedule</th>
+        <th>Last Run</th>
+        <th>Next Run</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+// ===== ONLINE/OFFLINE STATUS =====
+function updateStatus(updatedAt) {
+  const pill = el('statusPill');
+  const text = el('statusText');
+  const lastEl = el('lastUpdated');
+
+  if (!updatedAt) {
+    pill.className = 'status-pill offline';
+    text.textContent = 'Offline';
+    lastEl.textContent = 'Never updated';
+    return;
+  }
+
+  const age = Date.now() - new Date(updatedAt).getTime();
+  const isOnline = age < OFFLINE_THRESHOLD;
+
+  pill.className = 'status-pill ' + (isOnline ? 'online' : 'offline');
+  text.textContent = isOnline ? 'Online' : 'Stale';
+
+  lastEl.textContent = 'Updated ' + fmtTime(updatedAt);
+}
+
+// ===== LOADING BAR =====
+let loadingTimer = null;
+function showLoading() {
+  const bar = el('loadingBar');
+  bar.style.opacity = '1';
+  bar.style.width = '30%';
+  clearTimeout(loadingTimer);
+  loadingTimer = setTimeout(() => { bar.style.width = '70%'; }, 200);
+}
+function hideLoading(ok) {
+  const bar = el('loadingBar');
+  clearTimeout(loadingTimer);
+  bar.style.width = '100%';
+  setTimeout(() => { bar.style.opacity = '0'; bar.style.width = '0%'; }, 400);
+}
+
+// ===== FETCH & RENDER =====
+async function fetchMetrics() {
+  showLoading();
+  try {
+    const url = METRICS_URL + '?_=' + Date.now(); // bust cache
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    renderAll(data);
+    hideLoading(true);
+  } catch (err) {
+    console.warn('Failed to fetch metrics:', err);
+    hideLoading(false);
+    el('lastUpdated').textContent = 'Fetch failed';
+    el('statusPill').className = 'status-pill offline';
+    el('statusText').textContent = 'Error';
+  }
+}
+
+function renderAll(data) {
+  if (!data) return;
+
+  updateStatus(data.updated_at);
+  renderMachine(data.machine, data.history);
+  renderRoborto(data.roborto);
+  renderBrief(data.brief);
+  renderTryadd(data.brief);
+  renderCron(data.cron_jobs);
+}
+
+// ===== INIT =====
+fetchMetrics();
+setInterval(fetchMetrics, REFRESH_INTERVAL);
+
+// Redraw sparklines on resize
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(fetchMetrics, 300);
+});
+</script>
+
+</body>
+</html>

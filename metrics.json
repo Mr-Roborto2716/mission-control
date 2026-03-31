@@ -1,0 +1,89 @@
+{
+  "updated_at": "2026-03-31T00:20:03.094709+00:00",
+  "machine": {
+    "hostname": "ASULinux",
+    "uptime_seconds": 5749,
+    "boot_time": "2026-03-30T22:44:13.994241+00:00",
+    "load_1": 0.24,
+    "load_5": 0.18,
+    "load_15": 0.3,
+    "ram_total_mb": 7940,
+    "ram_used_mb": 3257,
+    "ram_available_mb": 4683,
+    "disk_total_gb": 186.2,
+    "disk_used_gb": 8.7,
+    "disk_free_gb": 168.0,
+    "disk_pct": 5,
+    "tailscale_ip": "100.108.159.44"
+  },
+  "roborto": {
+    "last_seen": "2026-03-31T00:20:03.094480+00:00",
+    "model": "anthropic/claude-sonnet-4-6",
+    "status": "online"
+  },
+  "brief": {
+    "last_updated": "2026-03-30T23:43:07.851725+00:00",
+    "article_counts": {
+      "\ud83e\udd16 AI & ML": 8,
+      "\ud83c\udfae Gaming & Pop Culture": 8,
+      "\ud83d\udd2c Science": 8,
+      "\u2699\ufe0f Engineering": 8,
+      "\ud83d\udc04 Tryadd Watch": 8,
+      "\ud83c\udf2e M\u00e9xico": 5,
+      "\ud83e\ude90 Weird & Wonderful": 8
+    },
+    "total_articles": 53,
+    "tryadd_latest": [
+      {
+        "title": "Governance Reform at WOAH",
+        "link": "https://www.woah.org/en/governance-reform-at-woah/",
+        "_source": "World Animal Health"
+      },
+      {
+        "title": "Surveillance of High Pathogenicity Avian Influenza for Smallholder Poultry Systems in Resource-Limited Settings",
+        "link": "https://www.woah.org/en/surveillance-of-high-pathogenicity-avian-influenza-for-smallholder-poultry-systems-in-resource-limited-settings/",
+        "_source": "World Animal Health"
+      },
+      {
+        "title": "Shaping Future-Proof Veterinary Graduates in the Philippines",
+        "link": "https://www.woah.org/en/shaping-future-proof-veterinary-graduates-in-the-philippines/",
+        "_source": "World Animal Health"
+      }
+    ]
+  },
+  "cron_jobs": [
+    {
+      "name": "Daily Brief - Fetch Feeds",
+      "schedule": "45 13 * * *",
+      "next_run": "2026-03-31T19:45:00+00:00",
+      "last_run": null,
+      "enabled": true
+    },
+    {
+      "name": "Daily Brief - Roborto Curates",
+      "schedule": "0 14 * * *",
+      "next_run": "2026-03-31T20:00:00+00:00",
+      "last_run": null,
+      "enabled": true
+    },
+    {
+      "name": "Mission Control - Push Metrics",
+      "schedule": "*/5 * * * *",
+      "next_run": "2026-03-31T00:20:00+00:00",
+      "last_run": "2026-03-31T00:15:00.015000+00:00",
+      "enabled": true
+    }
+  ],
+  "history": {
+    "load_1": [
+      0.1,
+      0.03,
+      0.24
+    ],
+    "ram_used_pct": [
+      39.7,
+      39.9,
+      41.0
+    ]
+  }
+}
