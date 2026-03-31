@@ -1,15 +1,15 @@
 {
-  "updated_at": "2026-03-31T00:20:03.094709+00:00",
+  "updated_at": "2026-03-31T00:21:08.459015+00:00",
   "machine": {
     "hostname": "ASULinux",
-    "uptime_seconds": 5749,
-    "boot_time": "2026-03-30T22:44:13.994241+00:00",
-    "load_1": 0.24,
-    "load_5": 0.18,
-    "load_15": 0.3,
+    "uptime_seconds": 5814,
+    "boot_time": "2026-03-30T22:44:13.988659+00:00",
+    "load_1": 0.86,
+    "load_5": 0.36,
+    "load_15": 0.35,
     "ram_total_mb": 7940,
-    "ram_used_mb": 3257,
-    "ram_available_mb": 4683,
+    "ram_used_mb": 3291,
+    "ram_available_mb": 4649,
     "disk_total_gb": 186.2,
     "disk_used_gb": 8.7,
     "disk_free_gb": 168.0,
@@ -17,7 +17,7 @@
     "tailscale_ip": "100.108.159.44"
   },
   "roborto": {
-    "last_seen": "2026-03-31T00:20:03.094480+00:00",
+    "last_seen": "2026-03-31T00:21:08.458783+00:00",
     "model": "anthropic/claude-sonnet-4-6",
     "status": "online"
   },
@@ -69,8 +69,8 @@
     {
       "name": "Mission Control - Push Metrics",
       "schedule": "*/5 * * * *",
-      "next_run": "2026-03-31T00:20:00+00:00",
-      "last_run": "2026-03-31T00:15:00.015000+00:00",
+      "next_run": "2026-03-31T00:25:00+00:00",
+      "last_run": "2026-03-31T00:20:00.013000+00:00",
       "enabled": true
     }
   ],
@@ -78,12 +78,14 @@
     "load_1": [
       0.1,
       0.03,
-      0.24
+      0.24,
+      0.86
     ],
     "ram_used_pct": [
       39.7,
       39.9,
-      41.0
+      41.0,
+      41.4
     ]
   }
 }
